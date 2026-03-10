@@ -55,7 +55,7 @@ document.getElementById("form").addEventListener("submit", async (e) => {
         return;
     }
 
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/bookings`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/Bookings`, {
         method: "POST",
         headers: {
             "apikey": SUPABASE_KEY,
