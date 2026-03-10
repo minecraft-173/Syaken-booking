@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>車検予約フォーム</title>
+<style>
+body { font-family:sans-serif; background:#f2f2f2; padding:40px; }
+.box { max-width:400px; margin:auto; background:white; padding:30px; border-radius:10px; }
+input, button { width:100%; padding:10px; margin-top:10px; }
+button { background:#007bff; color:white; border:none; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="box">
+<h2>車検予約フォーム</h2>
+
+<form id="form">
+  <input name="name" placeholder="名前" required>
+  <input name="address" placeholder="住所" required>
+  <input name="car_number" placeholder="車ナンバー" required>
+  <input type="datetime-local" name="reservation_time" required>
+  <button>予約する</button>
+</form>
+</div>
+
+<script>
+// --- Supabase 設定 ---
+const SUPABASE_URL = "https://otruehqczjqordvzxbzk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_50Akv7Rw9jf10DyxDs4qwA_aq7oe0zk";
+
+// --- 日付制限関数 ---
+function isValidDate(datetimeStr) {
+    const dt = new Date(datetimeStr);
+    const day = dt.getDay(); // 日曜=0, 月曜=1, 火曜=2...
+    const hour = dt.getHours();
+    const minute = dt.getMinutes();
+
+    // 火曜は予約不可
+    if(day === 2) return false;
+    // 営業時間外は予約不可
+    if(hour < 9 || (hour === 9 && minute < 30) || hour >= 18) return false;
+
+    return true;
+}
+
+// --- フォーム送信 ---
+document.getElementById("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    const datetimeStr = form.get("reservation_time");
+
+    if(!isValidDate(datetimeStr)){
+        alert("予約日時が営業時間外、または火曜日です。");
+        return;
+    }
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/bookings`, {
+        method: "POST",
+        headers: {
+            "apikey": SUPABASE_KEY,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({
+            name: form.get("name"),
+            address: form.get("address"),
+            car_number: form.get("car_number"),
+            reservation_time: datetimeStr
+        })
+    });
+
+    if(res.status === 201){
+        alert("予約完了しました！");
+        e.target.reset();
+    } else {
+        alert("その時間はすでに予約済みです。");
+    }
+});
+</script>
+
+</body>
+</html>
